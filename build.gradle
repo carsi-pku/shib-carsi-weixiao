@@ -1,0 +1,81 @@
+apply plugin: 'distribution'
+apply plugin: 'idea'
+apply plugin: 'java'
+apply plugin: 'maven'
+
+defaultTasks 'clean', 'distZip', 'distTar'
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group = 'cn.edu.carsi'
+version = project.version
+
+repositories {
+    mavenLocal()
+    maven { url 'https://maven.aliyun.com/repository/google/' }
+    maven { url 'https://maven.aliyun.com/repository/jcenter/'}
+    maven { url "https://build.shibboleth.net/nexus/content/repositories/releases" }
+    maven { url "https://build.shibboleth.net/nexus/content/repositories/thirdparty" }
+    maven { url "https://mvnrepository.com/artifact/org.json/json" }
+}
+
+test.onlyIf { !Boolean.getBoolean('skip.tests') }
+
+configurations {
+    provided
+    compile.extendsFrom provided
+}
+configurations.compile.transitive = false
+
+dependencies {
+    compile "org.jasig.cas.client:cas-client-core:$project.casClientVersion"
+    compile "com.alibaba:fastjson:$project.fastjsonVersion"
+
+    provided "javax.servlet:javax.servlet-api:$project.servletVersion"
+    provided "net.shibboleth.idp:idp-authn-api:$project.shibIdpVersion"
+    provided "net.shibboleth.idp:idp-saml-api:$project.shibIdpVersion"
+    provided "commons-lang:commons-lang:$project.commonLangVersion"
+
+    testCompile "junit:junit:$project.junitVersion"
+    testCompile "org.mockito:mockito-all:$project.mockitoVersion"
+    testCompile "org.powermock:powermock-mockito-release-full:$project.powermockVersion"
+}
+
+distributions {
+    main {
+        baseName = 'shib-carsi-wechat'
+        contents {
+            from { 'build/dist-tmp' }
+        }
+    }
+}
+
+task prepDist() {
+    dependsOn jar
+
+    inputs.dir 'IDP_HOME/'
+    inputs.file 'LICENSE'
+
+    outputs.dir 'build/dist-tmp/'
+
+    doLast {
+        copy {
+            from('IDP_HOME')
+            from('LICENSE')
+            into 'build/dist-tmp/'
+        }
+        copy {
+            from (configurations.compile - configurations.provided)
+            from jar
+            into 'build/dist-tmp/edit-webapp/WEB-INF/lib'
+        }
+    }
+}
+
+distTar.dependsOn prepDist
+distZip.dependsOn prepDist
+
+task wrapper(type: Wrapper) {
+    gradleVersion = project.gradleVersion
+}
