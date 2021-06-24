@@ -51,7 +51,7 @@ public class ShibWeixiaoAuthServlet extends ShibBaseAuthServlet {
     private String clientSecret;
 
     @Override
-    protected void doGet(final HttpServletRequest request, final HttpServletResponse response){
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response) {
         try {
             final String ticket = CommonUtils.safeGetParameter(request, artifactParameterName);
             final String authenticationKey = ExternalAuthentication.startExternalAuthentication(request);
@@ -98,7 +98,7 @@ public class ShibWeixiaoAuthServlet extends ShibBaseAuthServlet {
     }
 
     private void validateWeixiaoTicket(final HttpServletRequest request, final HttpServletResponse response, final String ticket,
-                                      final String authenticationKey){
+                                       final String authenticationKey) {
         String uid = "";
         Map<String, Object> attributes = new HashMap();
         String wxcode = ticket;
@@ -132,9 +132,9 @@ public class ShibWeixiaoAuthServlet extends ShibBaseAuthServlet {
             attributes.put("gender", userinfomap.getInteger("gender"));
         if (userinfomap.containsKey("head_image") && userinfomap.getString("head_image").length() != 0)
             attributes.put("head_image", userinfomap.getString("head_image"));
-        if (userinfomap.containsKey("organization") && userinfomap.getJSONArray("organization").size() != 0 )
+        if (userinfomap.containsKey("organization") && userinfomap.getJSONArray("organization").size() != 0)
             attributes.put("organization", userinfomap.getJSONArray("organization"));
-        if (userinfomap.containsKey("role") && userinfomap.getJSONArray("role").size() != 0 )
+        if (userinfomap.containsKey("role") && userinfomap.getJSONArray("role").size() != 0)
             attributes.put("role", userinfomap.getJSONArray("role"));
         if (userinfomap.containsKey("campus") && userinfomap.getString("campus").length() != 0)
             attributes.put("campus", userinfomap.getString("campus"));
@@ -213,7 +213,7 @@ public class ShibWeixiaoAuthServlet extends ShibBaseAuthServlet {
                 isH5 = false;
             }
         }
-        String loginUrl = CommonUtils.constructRedirectUrl(isH5?oauth2LoginUrlh5:oauth2LoginUrl, serviceParameterName, serviceUrl, false, false, null);
+        String loginUrl = CommonUtils.constructRedirectUrl(isH5 ? oauth2LoginUrlh5 : oauth2LoginUrl, serviceParameterName, serviceUrl, false, false, null);
         return loginUrl;
     }
 
