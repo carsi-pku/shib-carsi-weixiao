@@ -257,19 +257,19 @@ public class ShibWeixiaoAuthServlet extends ShibBaseAuthServlet {
         oauth2LoginUrl = environment.getRequiredProperty("shibcarsi.weixiao.oauth2LoginUrl");
         logger.debug("shibcarsi.weixiao.oauth2LoginUrl: {}", oauth2LoginUrl);
 
-        oauth2LoginUrlh5 = environment.getProperty("shibcarsi.weixiao.oauth2LoginUrlh5", "append");
+        oauth2LoginUrlh5 = environment.getRequiredProperty("shibcarsi.weixiao.oauth2LoginUrlh5");
         logger.debug("shibcarsi.weixiao.oauth2LoginUrlh5: {}", oauth2LoginUrlh5);
 
-        oauth2TokenUrl = environment.getProperty("shibcarsi.weixiao.oauth2TokenUrl", "append");
+        oauth2TokenUrl = environment.getRequiredProperty("shibcarsi.weixiao.oauth2TokenUrl");
         logger.debug("shibcarsi.weixiao.oauth2TokenUrl: {}", oauth2TokenUrl);
 
-        oauth2ResourceUrl = environment.getProperty("shibcarsi.weixiao.oauth2ResourceUrl", "append");
+        oauth2ResourceUrl = environment.getRequiredProperty("shibcarsi.weixiao.oauth2ResourceUrl");
         logger.debug("shibcarsi.weixiao.oauth2ResourceUrl: {}", oauth2ResourceUrl);
 
-        clientId = environment.getProperty("shibcarsi.weixiao.oauth2clientid", "append");
+        clientId = environment.getRequiredProperty("shibcarsi.weixiao.oauth2clientid");
         logger.debug("shibcarsi.weixiao.oauth2clientid: {}", clientId);
 
-        clientSecret = environment.getProperty("shibcarsi.weixiao.oauth2clientsecret", "append");
+        clientSecret = environment.getRequiredProperty("shibcarsi.weixiao.oauth2clientsecret");
         logger.debug("shibcarsi.weixiao.oauth2clientsecret: {}", clientSecret);
     }
 }
