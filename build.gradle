@@ -44,7 +44,7 @@ dependencies {
 
 distributions {
     main {
-        baseName = 'shib-carsi-wechat'
+        baseName = 'shib-carsi-weixiao'
         contents {
             from { 'build/dist-tmp' }
         }

@@ -1,4 +1,4 @@
-## CARSI IdP 支持企业微信认证的插件
+## CARSI IdP 支持微校认证的插件
 
 ## 原理说明
 
@@ -23,7 +23,7 @@ gradle build -x test
 
 请参照CARSI的wiki（待补充url）配置IdP使用External的认证方式。特别注意以下配置：
 
-1. 在`idp.properties`中添加对接企业微信需要用到的属性：
+1. 在`idp.properties`中添加对接微校的属性：
 
 ```
 # Weixiao properties
