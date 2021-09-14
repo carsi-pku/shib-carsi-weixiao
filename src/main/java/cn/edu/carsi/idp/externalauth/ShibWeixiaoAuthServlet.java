@@ -1,8 +1,12 @@
 package cn.edu.carsi.idp.externalauth;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.google.common.base.Splitter;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import net.shibboleth.idp.authn.AuthnEventIds;
 import net.shibboleth.idp.authn.ExternalAuthentication;
 import net.shibboleth.idp.authn.ExternalAuthenticationException;
@@ -24,6 +28,8 @@ import javax.security.auth.Subject;
 import java.io.IOException;
 import java.util.*;
 import java.security.Principal;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 import net.shibboleth.idp.authn.principal.IdPAttributePrincipal;
 import net.shibboleth.idp.authn.principal.UsernamePrincipal;
@@ -47,8 +53,12 @@ public class ShibWeixiaoAuthServlet extends ShibBaseAuthServlet {
     private String oauth2TokenUrl;
     private String oauth2ResourceUrl;
     private String oauth2RedirectUri;
+    private String identityTypeUrl;
     private String clientId;
     private String clientSecret;
+
+    private LoadingCache<String, Map<String, Map>> cacheRole;
+    private int guavaCacheTimeout;
 
     @Override
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) {
@@ -118,58 +128,21 @@ public class ShibWeixiaoAuthServlet extends ShibBaseAuthServlet {
             attributes.put("name", userinfomap.getString("name"));
         if (userinfomap.containsKey("identity_type"))
             attributes.put("identity_type", userinfomap.getInteger("identity_type"));
-        if (userinfomap.containsKey("grade") && userinfomap.getString("grade").length() != 0)
-            attributes.put("grade", userinfomap.getString("grade"));
-        if (userinfomap.containsKey("college") && userinfomap.getString("college").length() != 0)
-            attributes.put("college", userinfomap.getString("college"));
-        if (userinfomap.containsKey("profession") && userinfomap.getString("profession").length() != 0)
-            attributes.put("profession", userinfomap.getString("profession"));
-        if (userinfomap.containsKey("class") && userinfomap.getString("class").length() != 0)
-            attributes.put("class", userinfomap.getString("class"));
-        if (userinfomap.containsKey("identity_title") && userinfomap.getString("identity_title").length() != 0)
-            attributes.put("identity_title", userinfomap.getString("identity_title"));
-        if (userinfomap.containsKey("gender"))
-            attributes.put("gender", userinfomap.getInteger("gender"));
-        if (userinfomap.containsKey("head_image") && userinfomap.getString("head_image").length() != 0)
-            attributes.put("head_image", userinfomap.getString("head_image"));
-        if (userinfomap.containsKey("organization") && userinfomap.getJSONArray("organization").size() != 0)
-            attributes.put("organization", userinfomap.getJSONArray("organization"));
-        if (userinfomap.containsKey("role") && userinfomap.getJSONArray("role").size() != 0)
-            attributes.put("role", userinfomap.getJSONArray("role"));
-        if (userinfomap.containsKey("campus") && userinfomap.getString("campus").length() != 0)
-            attributes.put("campus", userinfomap.getString("campus"));
-        if (userinfomap.containsKey("dorm_number") && userinfomap.getString("dorm_number").length() != 0)
-            attributes.put("dorm_number", userinfomap.getString("dorm_number"));
-        if (userinfomap.containsKey("physical_chip_number") && userinfomap.getString("physical_chip_number").length() != 0)
-            attributes.put("physical_chip_number", userinfomap.getString("physical_chip_number"));
-        if (userinfomap.containsKey("physical_card_number") && userinfomap.getString("physical_card_number").length() != 0)
-            attributes.put("physical_card_number", userinfomap.getString("physical_card_number"));
-        if (userinfomap.containsKey("nation") && userinfomap.getString("nation").length() != 0)
-            attributes.put("nation", userinfomap.getString("nation"));
-        if (userinfomap.containsKey("birthday") && userinfomap.getString("birthday").length() != 0)
-            attributes.put("birthday", userinfomap.getString("birthday"));
-        if (userinfomap.containsKey("origin_place") && userinfomap.getString("origin_place").length() != 0)
-            attributes.put("origin_place", userinfomap.getString("origin_place"));
-        if (userinfomap.containsKey("graduated_school") && userinfomap.getString("graduated_school").length() != 0)
-            attributes.put("graduated_school", userinfomap.getString("graduated_school"));
-        if (userinfomap.containsKey("address") && userinfomap.getString("address").length() != 0)
-            attributes.put("address", userinfomap.getString("address"));
-        if (userinfomap.containsKey("contact_person") && userinfomap.getString("contact_person").length() != 0)
-            attributes.put("contact_person", userinfomap.getString("contact_person"));
-        if (userinfomap.containsKey("contact_phone") && userinfomap.getString("contact_phone").length() != 0)
-            attributes.put("contact_phone", userinfomap.getString("contact_phone"));
         if (userinfomap.containsKey("email") && userinfomap.getString("email").length() != 0)
             attributes.put("email", userinfomap.getString("email"));
-        if (userinfomap.containsKey("id_card") && userinfomap.getString("id_card").length() != 0)
-            attributes.put("id_card", userinfomap.getString("id_card"));
-        if (userinfomap.containsKey("telephone") && userinfomap.getString("telephone").length() != 0)
-            attributes.put("telephone", userinfomap.getString("telephone"));
-        if (userinfomap.containsKey("start_at") && userinfomap.getString("start_at").length() != 0)
-            attributes.put("start_at", userinfomap.getString("start_at"));
-        if (userinfomap.containsKey("expire_at") && userinfomap.getString("expire_at").length() != 0)
-            attributes.put("expire_at", userinfomap.getString("expire_at"));
-        if (userinfomap.containsKey("updated_at") && userinfomap.getString("updated_at").length() != 0)
-            attributes.put("updated_at", userinfomap.getString("updated_at"));
+
+        try{
+            Map<String, Map> cache = this.cacheRole.get(token);
+            Map<Integer, String> roles = cache.get("roles");
+            if(attributes.containsKey("identity_type")  &&  roles.containsKey(attributes.get("identity_type"))){
+                attributes.put("identity_type", roles.get(attributes.get("identity_type")));
+            }else{
+                attributes.put("identity_type", "unknown");
+            }
+        }catch (Exception e){
+            logger.error("failed getting identity-type cache.");
+        }
+
         logger.debug("validateWeixiaoTicket: attributes before plugin mapping: {}", attributes);
 
         attributes = mapAttrs(attributes);
@@ -241,6 +214,35 @@ public class ShibWeixiaoAuthServlet extends ShibBaseAuthServlet {
         super.init(config);
         final ApplicationContext ac = (ApplicationContext) config.getServletContext().getAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE);
         parseProperties(ac.getEnvironment());
+
+        this.cacheRole = CacheBuilder.newBuilder()
+                .expireAfterWrite(guavaCacheTimeout, TimeUnit.MINUTES)
+                .build(
+                        new CacheLoader<String, Map<String, Map>>() {
+                            @Override
+                            public Map<String, Map> load(String key) throws Exception {
+                                logger.info("loading cache begin: identity_type");
+
+                                List<NameValuePair> params = new ArrayList<NameValuePair>();
+                                params.add(new BasicNameValuePair("access_token", key));
+                                JSONObject roles = JSON.parseObject(httpPostUrl(identityTypeUrl, params));
+
+                                Map<Integer, String> roleMap = new ConcurrentHashMap();
+                                if (roles.containsKey("list") && roles.getJSONArray("list").size() > 0){
+                                    JSONArray list = roles.getJSONArray("list");
+                                    for(int i = 0; i < list.size(); i ++){
+                                        JSONObject item = list.getJSONObject(i);
+                                        roleMap.put(item.getInteger("identity_type"), item.getString("name"));
+                                    }
+                                }
+
+                                Map<String, Map> result = new ConcurrentHashMap();
+                                result.put("roles", roleMap);
+                                logger.info("load: identity_type: {}", roleMap);
+                                logger.info("loading cache end: identity_type");
+                                return result;
+                            }
+                        });
     }
 
     /**
@@ -266,10 +268,16 @@ public class ShibWeixiaoAuthServlet extends ShibBaseAuthServlet {
         oauth2ResourceUrl = environment.getRequiredProperty("shibcarsi.weixiao.oauth2ResourceUrl");
         logger.debug("shibcarsi.weixiao.oauth2ResourceUrl: {}", oauth2ResourceUrl);
 
+        identityTypeUrl = environment.getRequiredProperty("shibcarsi.weixiao.identityTypeUrl");
+        logger.debug("shibcarsi.weixiao.identityTypeUrl: {}", identityTypeUrl);
+
         clientId = environment.getRequiredProperty("shibcarsi.weixiao.oauth2clientid");
         logger.debug("shibcarsi.weixiao.oauth2clientid: {}", clientId);
 
         clientSecret = environment.getRequiredProperty("shibcarsi.weixiao.oauth2clientsecret");
         logger.debug("shibcarsi.weixiao.oauth2clientsecret: {}", clientSecret);
+
+        guavaCacheTimeout = environment.getProperty("shibcarsi.weixiao.guavaCacheTimeout", Integer.TYPE, 600);  // default 10 minutes
+        logger.debug("shibcarsi.weixiao.guavaCacheTimeout: {}", guavaCacheTimeout);
     }
 }

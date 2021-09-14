@@ -35,6 +35,7 @@ shibcarsi.weixiao.oauth2LoginUrl = https://open.wecard.qq.com/connect/oauth/pc-a
 shibcarsi.weixiao.oauth2LoginUrlh5 = https://open.wecard.qq.com/connect/oauth/authorize?app_key=${shibcarsi.weixiao.appkey}&response_type=code&ocode=${shibcarsi.weixiao.ocode}&scope=snsapi_userinfo&state=STATE
 shibcarsi.weixiao.oauth2TokenUrl = https://open.wecard.qq.com/connect/oauth2/token
 shibcarsi.weixiao.oauth2ResourceUrl = https://open.wecard.qq.com/connect/oauth/get-user-info
+shibcarsi.weixiao.identityTypeUrl = https://open.wecard.qq.com/cgi-bin/user/get-identity-type
 shibcarsi.weixiao.oauth2clientid = ${shibcarsi.weixiao.appkey}
 shibcarsi.weixiao.oauth2clientsecret = ${shibcarsi.weixiao.appsecret}
 ```
