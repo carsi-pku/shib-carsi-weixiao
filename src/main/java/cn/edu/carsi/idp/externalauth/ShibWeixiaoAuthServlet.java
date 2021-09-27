@@ -176,17 +176,16 @@ public class ShibWeixiaoAuthServlet extends ShibBaseAuthServlet {
      * Uses the CAS CommonUtils to build the Weixiao Redirect URL.
      */
     private String constructRedirectUrl(final String serviceUrl, final String userAgent) {
-        boolean isH5 = false;
+        boolean isApp = false;
         if (userAgent == null) {
-            isH5 = false;
+            isApp = false;
         } else {
-            if (userAgent.contains("Android") || userAgent.contains("iPhone") || userAgent.contains("iPad")) {
-                isH5 = true;
-            } else {
-                isH5 = false;
+            if (userAgent.contains("MicroMessenger")) {
+                isApp = true;
             }
         }
-        String loginUrl = CommonUtils.constructRedirectUrl(isH5 ? oauth2LoginUrlh5 : oauth2LoginUrl, serviceParameterName, serviceUrl, false, false, null);
+        logger.debug("isApp: {}", isApp);
+        String loginUrl = CommonUtils.constructRedirectUrl(isApp ? oauth2LoginUrlh5 : oauth2LoginUrl, serviceParameterName, serviceUrl, false, false, null);
         return loginUrl;
     }
 
